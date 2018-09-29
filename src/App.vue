@@ -29,7 +29,18 @@
           <div class='caption-text'>Lot of busses passing</div>
         </div> 
       </div>
-
+      
+      <h3>Population density</h3>
+       <div class='caption-group'>
+        <div class='caption-line'>
+          <div class='square red opacity-3'></div> 
+          <div class='caption-text'>Low density area</div>
+        </div> 
+        <div class='caption-line'>
+          <div class='square red opacity-9'></div> 
+          <div class='caption-text'>High density area</div>
+        </div> 
+      </div>
 
     </div>
   </div>
@@ -66,6 +77,14 @@
 
 .green {
   background: green;
+}
+
+.opacity-3 {
+  opacity: 0.1;
+}
+
+.opacity-9 {
+  opacity: 0.9;
 }
 
 .red {
@@ -108,6 +127,7 @@
 
 import converted from './data/converted-2010.json';
 import bussource from './data/route.json';
+import fullSource from './data/full-network.json';
 // import frequency from './data/route_frequency.json';
 
 const defaultRadius = 60;
@@ -116,6 +136,7 @@ export default {
     return {
       map: null,
       showStops: true,
+      eraseMarker: true,
       population: converted,
       bustops: bussource.busstops,
       // freqs: frequency,
@@ -137,6 +158,13 @@ export default {
   computed: {
     // a computed getter
     markers: function () {
+      if (this.time == 4) {
+        this.bustops = fullSource.busstops;
+      }
+      if (this.time == 5) {
+        this.eraseMarker = false;
+        this.drawPopulation();
+      }
       if (this.map != null) {
         if (this.showStops) this.drawStops();
       }
@@ -148,10 +176,10 @@ export default {
         return '02:00';
       } else if (parseInt(this.time) === 1) {
         return '06:00';
-      } else if (parseInt(this.time) === 2) {
+      } else if (parseInt(this.time) >= 2) {
         return '08:00';
       }
-    }
+    },
   },
 
 
@@ -183,6 +211,7 @@ export default {
       this.population.forEach(element => {
         this.drawPopulationSquare(element.geometry, element.total);
       });
+
     },
 
     drawPopulationSquare(coords, total) {
@@ -198,10 +227,12 @@ export default {
     },
 
     drawStops() {
-      this.clearMap();
-      for (let i = 0; i < this.bustops.length; i++) {
-        const bs = this.bustops[i];
-        this.drawStop(0, bs.id);
+      if (this.eraseMarker) {
+        this.clearMap();
+        for (let i = 0; i < this.bustops.length; i++) {
+          const bs = this.bustops[i];
+          this.drawStop(0, bs.id);
+        }
       }
     },
 
@@ -211,8 +242,11 @@ export default {
       if (this.time == 1) {
         resp = defaultRadius * 1.66 * (1 + Math.random());
       }
-      if (this.time == 2) {
+      if (this.time >= 2) {
         resp = defaultRadius * 1.88 * (1 + Math.random());
+      }
+      if (this.time >= 4) {
+        return defaultRadius * 0.5 * (1 + 2 * Math.random());
       }
       return resp;
     },
@@ -241,7 +275,7 @@ export default {
       if (parseInt(time) === 1) {
         return 'orange';
       }
-      if (parseInt(time) === 2) {
+      if (parseInt(time) >= 2) {
         return 'green';
       }
       return 'red';
@@ -259,6 +293,7 @@ export default {
           }
         }
       }
+      this.populationIsDrawn = false;
     },
   },
 };
